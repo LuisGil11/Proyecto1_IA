@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def generate_series(x0 = 0, y0 = 0, n = 1000):
     x = np.zeros(n)
@@ -68,7 +69,9 @@ def predict(x):
 
 # * Entrenamiento
 # Número de épocas
-for epoch in range(1000):
+epochs = 1000
+errors = []
+for epoch in range(epochs):
 
     # Para cada fila en x (ciclo a través del conjunto de datos)
     for row in range(x.shape[0]):
@@ -79,6 +82,11 @@ for epoch in range(1000):
         # Para cada fila se actualiza los pesos
         backward_prop(y_hat, row)
 
+    # if (epoch + 1) % 10 == 0:
+    y_pred = predict(x_test)
+    error = np.mean((y_test - y_pred) ** 2)
+    errors.append(error)
+
 print(w, b)
 
 # * Prueba
@@ -88,3 +96,10 @@ y_pred = predict(x_test)
 # Calculamos el error
 error = np.mean((y_test - y_pred) ** 2)
 print(error)
+
+# Graficar los errores
+plt.plot(range(0, epochs), errors)
+plt.xlabel('Epochs')
+plt.ylabel('Mean Squared Error')
+plt.title('Error vs Epochs')
+plt.show()
