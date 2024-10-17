@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 
 # def forward_prop(row):
 #     return np.dot(row, w) + b
@@ -73,31 +76,89 @@ def backward_prop(y_hat, row, x, y, a1, z1):
   global b1, b2, W1, W2
   error = y[row] - y_hat
 
+  # Construimos un vector para las derivadas parciales 
+  # conrespecto a los sesgos de la capa escondida
   db1 = np.array([
       -error * y_hat * (1 - y_hat) * W2[0] * dsigmoide(z1[0]),
       -error * y_hat * (1 - y_hat) * W2[1] * dsigmoide(z1[1])
   ])
 
+  # Construimos un vector para la derivada parcial
+  # conrespecto al sesgo de la capa de salida
   db2 = -error * y_hat * (1 - y_hat)
-  
+
+  # Actualizamos los sesgos
   b1 = b1 - alpha * db1
   b2 = b2 - alpha * db2
   
+  # Construimos una matriz para las derivadas parciales
+  # conrespecto a los pesos de la capa escondida
   dW1 = np.array([
       [-error * y_hat * (1 - y_hat) * W2[0] * dsigmoide(z1[0]) * x[row][0],
        -error * y_hat * (1 - y_hat) * W2[1] * dsigmoide(z1[1]) * x[row][0]],
       [-error * y_hat * (1 - y_hat) * W2[0] * dsigmoide(z1[0]) * x[row][1],
        -error * y_hat * (1 - y_hat) * W2[1] * dsigmoide(z1[1]) * x[row][1]]
   ])
-  
+
+
+  # Construimos un vector para las derivadas parciales
+  # conrespecto a los pesos de la capa de salida
   dW2 = np.array([
       -error * y_hat * (1 - y_hat) * a1[0],
       -error * y_hat * (1 - y_hat) * a1[1]
   ])
   
+  # Actualizamos los pesos
   W1 = W1 - alpha * dW1
   W2 = W2 - alpha * dW2
 
+# Entrenamos la red neuronal
+epochs = 1000
+errors = []
+for epoch in range(epochs):
+  y_preds = []
+  for row in range(len(x)):
+    a1, a2, z1, z2 = forward_prop(x[row])
+    y_preds.append(a2)
+    backward_prop(a2, row, x, y, a1, z1)
+  # Calculamos el error cuadrático medio y comparamos la calidad de las respuestas
+  mse = np.mean((np.array(y_preds) - y_train) ** 2)
+  errors.append(mse)
+
+print("Error cuadrático medio final en entrenamiento:", mse)
+
+# for row in range(len(x)):
+#   a1, a2, z1, z2 = forward_prop(x[row])
+#   backward_prop(a2, row, x, y, a1, z1)
+
+# Probamos la red neuronal
+x = x_test
+y = y_test
+
+y_preds = []
 for row in range(len(x)):
   a1, a2, z1, z2 = forward_prop(x[row])
-  backward_prop(a2, row, x, y, a1, z1)
+  y_preds.append(a2)
+
+# Calculamos el error cuadrático medio en el conjunto de prueba
+mse = np.mean((np.array(y_preds) - y_test) ** 2)
+print("Error cuadrático medio en prueba:", mse)
+
+# Graficamos las predicciones y los puntos reales
+plt.figure(figsize=(10, 5))
+plt.plot(y_test, label='Puntos Reales')
+plt.plot(y_preds, label='Predicciones')
+plt.xlabel('Índice')
+plt.ylabel('Valor')
+plt.title('Predicciones vs Puntos Reales')
+plt.legend()
+plt.show()
+
+# Graficamos el error cuadrático medio en función de las épocas
+plt.figure(figsize=(10, 5))
+plt.plot(errors, label='Error Cuadrático Medio')
+plt.xlabel('Épocas')
+plt.ylabel('Error Cuadrático Medio')
+plt.title('Error Cuadrático Medio vs Épocas')
+plt.legend()
+plt.show()
