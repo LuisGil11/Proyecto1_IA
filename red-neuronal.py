@@ -1,87 +1,73 @@
 import numpy as np
 
+def generate_series(x0 = 0, y0 = 0, n = 1000):
+    x = np.zeros(n)
+    y = np.zeros(n)
+    x[0] = x0
+    y[0] = y0
+    for i in range(1, n):
+        x[i] = 1 - a * x[i - 1] ** 2 + y[i - 1]
+        y[i] = b * y[i - 1]
+    return x, y
+
 # Inicializamos los parámetros
-input_size = 2
-hidden_size = 2
-output_size = 1
-
-# Pesos y sesgos para la capa escondida
-W1 = np.random.rand(input_size, hidden_size)
-b1 = np.random.rand(hidden_size)
-
-# Pesos y sesgos para la capa de salida
-W2 = np.random.rand(hidden_size, output_size)
-b2 = np.random.rand(output_size)
-
-# Tasa de aprendizaje
+a = 1.4
+b = 0.3
+w = np.random.rand(2)
 alpha = 0.001
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-def sigmoid_derivative(x):
-    return x * (1 - x)
-    
-
-def forward_prop(X):
-    # Capa escondida
-    z1 = np.dot(X, W1) + b1
-    a1 = sigmoid(z1)
-    
-    # Capa de salida
-    z2 = np.dot(a1, W2) + b2
-    a2 = sigmoid(z2)
-    
-    return a1, a2
-
-def backward_prop(X, y, a1, a2):
-    global W1, b1, W2, b2
-
-    n = X.shape[0]
-    
-    # Error en la capa de salida
-    error_output = y - a2
-    delta_output = error_output * sigmoid_derivative(a2)
-
-    # Gradientes para la capa de salida
-    dW2 = np.dot(a1.T, delta_output) / n
-    db2 = np.sum(delta_output, axis=0) / n
-    
-    # Error en la capa escondida
-    error_hidden = delta_output.dot(W2.T)
-    delta_hidden = error_hidden * sigmoid_derivative(a1)
-    
-    # Gradientes para la capa escondida
-    dW1 = np.dot(X.T, delta_hidden) / n
-    db1 = np.sum(delta_hidden, axis=0) / n
-    
-    # Actualizar los pesos y sesgos
-    W2 += alpha * a1.T.dot(delta_output)
-    b2 += alpha * np.sum(delta_output, axis=0)
-    W1 += alpha * X.T.dot(delta_hidden)
-    b1 += alpha * np.sum(delta_hidden, axis=0)
+# Generamos las series
+x_serie, y_serie = generate_series()
+x = np.column_stack((x_serie[:-1], y_serie[:-1]))
+y = x_serie[1:]
 
 
-    # Datos de entrenamiento (ejemplo)
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([[0], [1], [1], [0]])  # XOR
+def forward_prop(row):
+    y_hat = np.dot(x[row], w) + b
+    # return y_hat
+    if y_hat > 0:
+        return 1
+    else:
+        return 0
 
-# Número de épocas
-epochs = 10000
 
-for epoch in range(epochs):
-    # Propagación hacia adelante
-    a1, a2 = forward_prop(X)
-    
-    # Retropropagación
-    backward_prop(X, y, a1, a2)
-    
-    # Imprimir el error cada 1000 épocas
-    if (epoch + 1) % 1000 == 0:
-        loss = np.mean(np.square(y - a2))
-        print(f"Epoch {epoch + 1}, Loss: {loss}")
+def backward_prop(y_hat, row):
+    global w, b
+    error = y[row] - y_hat
+    w[0] = w[0] + alpha * (error) * x[row][0]
+    w[1] = w[1] + alpha * (error) * x[row][1]
+    b = b + alpha * (error)
 
-# Predicciones finales
-_, predictions = forward_prop(X)
-print("Predicciones:")
-print(predictions)
+# Retorna la prediccion de y_hat, para el conjunto de prueba.
+def predict(x):
+    y = []
+
+    # El usuario podría ingresar varias filas. Calcule y_hat para cada una de las filas
+    # del conjunto de datos de prueba.
+
+    for row in x:
+        # Suma ponderada
+        y_pred = np.dot(row, w) + b
+        y.append(y_pred)
+
+        # Paso de la suma ponderada por la función de activación
+        # if y_pred > 0:
+        #     y.append(1)
+        # else:
+        #     y.append(0)
+
+    return y
+
+# * Número de épocas
+for epoch in range(1000):
+
+    # Para cada fila en x (ciclo a través del conjunto de datos)
+    for row in range(x.shape[0]):
+
+        # Para cada fila de x, predice y_hat
+        y_hat = forward_prop(row)
+
+        # Para cada fila se actualiza los pesos
+        backward_prop(y_hat, row)
+
+print(w, b)
